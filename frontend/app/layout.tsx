@@ -2,6 +2,8 @@ import type { Metadata } from "next";
 import { Inter } from "next/font/google";
 import "./globals.css";
 import { TransactionProvider } from "@/components/context/context";
+import { ToastContainer } from "react-toastify";
+import { Toaster } from "react-hot-toast";
 
 const inter = Inter({ subsets: ["latin"] });
 
@@ -17,6 +19,7 @@ export default function RootLayout({
 }>) {
   return (
     <html lang="en">
+      <Toaster position="top-right" reverseOrder={false} />
       <TransactionProvider>
         <body className={inter.className}>{children}</body>
       </TransactionProvider>

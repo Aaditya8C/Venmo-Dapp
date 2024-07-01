@@ -7,9 +7,12 @@ import {
   UserRound,
   Users,
 } from "lucide-react";
-import React, { useState } from "react";
+import React, { useContext, useState } from "react";
+import { textShortner } from "../helpers/textShortner";
+import { TransactionContext } from "../context/context";
 
 const LeftSection = () => {
+  const context = useContext(TransactionContext);
   const [userData, setUserData] = useState([
     {
       address: "nkdjnkdhbnikdh54+6845",
@@ -24,6 +27,11 @@ const LeftSection = () => {
       message: "hey there myselft aaditya",
     },
   ]);
+  if (!context) {
+    return <div>Error: Context not available</div>;
+  }
+  const { fetchTransactions } = context;
+
   return (
     <div className="grid gap-10 h-fit">
       <div className=" bg-orange-200 p-10">
@@ -43,7 +51,7 @@ const LeftSection = () => {
               <div key={index} className="flex justify-between items-center">
                 <UserRound />
                 <span className="flex-1 px-6 text-base">
-                  <p>{item.address}</p>
+                  <p>{textShortner(item.address)}</p>
                   <p className="font-semibold">{item.message}</p>
                 </span>
                 <div className="flex gap-3">

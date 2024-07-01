@@ -3,16 +3,35 @@ import { ethers } from "ethers";
 import React, { createContext, ReactNode, useEffect, useState } from "react";
 import { contractAbi, contractAddress } from "../utils/constants";
 import { getCookie, setCookie } from "cookies-next";
+import toast from "react-hot-toast";
+import TimeAgo from "javascript-time-ago";
+import en from "javascript-time-ago/locale/en";
+TimeAgo.addLocale(en);
+const timeAgo = new TimeAgo("en-US");
 
 // Define a type for the context value
-interface TransactionContextValue {}
+interface TransactionContextValue {
+  connectWallet: () => void;
+  sendTransaction: () => void;
+  fetchTransactions: () => void;
+  setReceiverAddress: (address: string) => void;
+  setAmount: (amount: string) => void;
+  setMessage: (message: string) => void;
+  currentAccount: string | null;
+  receiverAddress: string;
+  amount: string;
+  message: string;
+  transactionCount: Number | undefined;
+  isLoading: boolean;
+}
 
 // Providing a default value to transactionCOntext
-const defaultContextValue: TransactionContextValue = {};
+// const defaultContextValue: TransactionContextValue = {};
 
 // Create the context with a default value
-export const TransactionContext =
-  createContext<TransactionContextValue>(defaultContextValue);
+export const TransactionContext = createContext<
+  TransactionContextValue | undefined
+>(undefined);
 
 interface TransactionProviderProps {
   children: ReactNode;
@@ -25,11 +44,13 @@ export const TransactionProvider: React.FC<TransactionProviderProps> = ({
 }) => {
   const [currentAccount, setCurrentAccount] = useState("");
   const [receiverAddress, setReceiverAddress] = useState("");
-  const [amount, setAmount] = useState(0);
+  const [amount, setAmount] = useState("");
   const [message, setMessage] = useState("");
+  const [userTransactions, setUserTransactions] = useState([]);
   const [transactionCount, setTransactionCount] = useState(
-    getCookie("TxCount")
+    Number(getCookie("TxCount"))
   );
+  const [isLoading, setIsLoading] = useState(false);
 
   const isWalletConnected = async () => {
     try {
@@ -86,10 +107,85 @@ export const TransactionProvider: React.FC<TransactionProviderProps> = ({
 
         const currentTransactionCount =
           await transactionContract.getTransactionsCount();
-        console.log(currentTransactionCount);
+        console.log("currentTransactionCount", currentTransactionCount);
         setCookie("TxCount", currentTransactionCount);
       }
     } catch (error) {
+      console.log(error);
+    }
+  };
+
+  const sendTransaction = async () => {
+    try {
+      if (ethereum) {
+        const transactionContract = await createEthereumContract();
+        console.log(transactionContract, "transactionContract created");
+        const parsedAmount = ethers.parseEther(amount);
+
+        console.log(currentAccount, receiverAddress, parsedAmount);
+
+        await ethereum.request({
+          method: "eth_sendTransaction",
+          params: [
+            {
+              from: currentAccount,
+              to: receiverAddress,
+              gas: "0x5208",
+              value: parsedAmount.toString(),
+            },
+          ],
+        });
+
+        const transactionHash = await transactionContract.addTransaction(
+          receiverAddress,
+          parsedAmount,
+          message
+        );
+        setIsLoading(true);
+        console.log("Loading.......");
+        await transactionHash.wait();
+        console.log("Sucesss");
+        setIsLoading(false);
+
+        const transactionCount =
+          await transactionContract.getTransactionsCount();
+        setTransactionCount(Number(transactionCount));
+        window.location.reload();
+      } else {
+        console.log("No Ethereum Object Founc");
+      }
+    } catch (error: any) {
+      toast.error(error.message);
+      console.log(error);
+    }
+  };
+
+  const fetchTransactions = async () => {
+    try {
+      if (ethereum) {
+        const transactionContract = await createEthereumContract();
+        const availableTransactions =
+          await transactionContract.getAllTransactions();
+
+        const formattedTransactions = availableTransactions.map(
+          (transaction: any) => ({
+            receiverAddress: transaction.receiver,
+            senderAddress: transaction.sender,
+            timestamp: timeAgo.format(
+              new Date(Number(transaction.timestamp) * 1000),
+              "mini"
+            ),
+            message: transaction.message,
+            amount: parseInt(transaction.amount._hex) / 10 ** 18,
+          })
+        );
+        console.log(formattedTransactions, "formatted transactions");
+        setUserTransactions(formattedTransactions);
+      } else {
+        console.log("No Ethereum Object Founc");
+      }
+    } catch (error: any) {
+      toast.error(error.message);
       console.log(error);
     }
   };
@@ -100,7 +196,23 @@ export const TransactionProvider: React.FC<TransactionProviderProps> = ({
   }, [transactionCount]);
 
   return (
-    <TransactionContext.Provider value={{ connectWallet, currentAccount }}>
+    <TransactionContext.Provider
+      value={{
+        connectWallet,
+        currentAccount,
+        sendTransaction,
+        setReceiverAddress,
+        receiverAddress,
+        setAmount,
+        amount,
+        setMessage,
+        message,
+        isLoading,
+        transactionCount,
+        fetchTransactions,
+        userTransactions,
+      }}
+    >
       {children}
     </TransactionContext.Provider>
   );
