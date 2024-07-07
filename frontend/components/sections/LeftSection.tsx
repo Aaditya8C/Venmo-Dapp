@@ -4,63 +4,85 @@ import {
   Earth,
   Heart,
   MessageSquare,
-  UserRound,
+  User as UserIcon,
   Users,
 } from "lucide-react";
-import React, { useContext, useState } from "react";
+import React, { useContext, useEffect, useState } from "react";
 import { textShortner } from "../helpers/textShortner";
 import { TransactionContext } from "../context/context";
 
+interface UserTransaction {
+  senderAddress: string;
+  receiverAddress: string;
+  message: string;
+  timestamp: string;
+  amount: number;
+}
 const LeftSection = () => {
   const context = useContext(TransactionContext);
-  const [userData, setUserData] = useState([
-    {
-      address: "nkdjnkdhbnikdh54+6845",
-      message: "hey there myselft aaditya",
-    },
-    {
-      address: "nkdjnkdhbnikdh54+6845",
-      message: "hey there myselft aaditya",
-    },
-    {
-      address: "nkdjnkdhbnikdh54+6845",
-      message: "hey there myselft aaditya",
-    },
-  ]);
   if (!context) {
-    return <div>Error: Context not available</div>;
+    return <div>Error: Context not available or failed to fetch data</div>;
   }
-  const { fetchTransactions } = context;
+  const { userTransactions } = context as {
+    userTransactions: UserTransaction[];
+  };
+  const { currentAccount } = context;
+  const generateRandomAvatar = () => {
+    const avatar = Math.floor(Math.random() * 1000);
+    return `https://avatars.dicebear.com/api/adventurer/${
+      avatar + (currentAccount || "")
+    }.svg`;
+  };
+
+  console.log(userTransactions);
 
   return (
     <div className="grid gap-10 h-fit">
-      <div className=" bg-orange-200 p-10">
+      <div className="bg-orange-200 p-10">
         <div className="flex justify-between">
           <p className="text-xl font-semibold">Activity</p>
           <div className="flex gap-4">
             <Earth />
-            <UserRound />
+            <UserIcon />
             <Users />
           </div>
         </div>
         <hr className="w-full h-[3px] my-2 bg-black " />
 
         <div className="grid gap-4">
-          {userData.map((item, index) => {
-            return (
-              <div key={index} className="flex justify-between items-center">
-                <UserRound />
-                <span className="flex-1 px-6 text-base">
-                  <p>{textShortner(item.address)}</p>
-                  <p className="font-semibold">{item.message}</p>
-                </span>
-                <div className="flex gap-3">
-                  <Heart />
-                  <MessageSquare />
+          {userTransactions.length > 0 ? (
+            userTransactions.map(
+              (
+                { senderAddress, receiverAddress, amount, timestamp, message },
+                index
+              ) => (
+                <div key={index} className="flex justify-between items-center">
+                  {/* <UserIcon /> */}
+                  <img
+                    src={generateRandomAvatar()}
+                    alt=""
+                    width={30}
+                    height={30}
+                    className="rounded-full"
+                  />
+                  <span className="flex-1 px-6 text-base">
+                    <p className="italic">
+                      {textShortner(senderAddress)} {"    "}to{"    "}
+                      {textShortner(receiverAddress)}
+                    </p>
+                    <p className="italic">{timestamp}</p>
+                    <p className="font-semibold">{message}</p>
+                  </span>
+                  <div className="flex gap-3">
+                    <Heart />
+                    <MessageSquare />
+                  </div>
                 </div>
-              </div>
-            );
-          })}
+              )
+            )
+          ) : (
+            <p>No transactions available</p>
+          )}
         </div>
       </div>
     </div>

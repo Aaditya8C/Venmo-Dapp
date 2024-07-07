@@ -4,9 +4,9 @@ import React, { createContext, ReactNode, useEffect, useState } from "react";
 import { contractAbi, contractAddress } from "../utils/constants";
 import { getCookie, setCookie } from "cookies-next";
 import toast from "react-hot-toast";
-import TimeAgo from "javascript-time-ago";
 import en from "javascript-time-ago/locale/en";
-TimeAgo.addLocale(en);
+import TimeAgo from "javascript-time-ago";
+TimeAgo.addDefaultLocale(en);
 const timeAgo = new TimeAgo("en-US");
 
 // Define a type for the context value
@@ -23,6 +23,7 @@ interface TransactionContextValue {
   message: string;
   transactionCount: Number | undefined;
   isLoading: boolean;
+  userTransactions: Array<object>;
 }
 
 // Providing a default value to transactionCOntext
@@ -64,6 +65,7 @@ export const TransactionProvider: React.FC<TransactionProviderProps> = ({
 
       if (accounts.length) {
         setCurrentAccount(accounts[0]);
+        fetchTransactions();
       } else {
         console.log("Noo Accounts found");
       }
@@ -150,7 +152,7 @@ export const TransactionProvider: React.FC<TransactionProviderProps> = ({
         const transactionCount =
           await transactionContract.getTransactionsCount();
         setTransactionCount(Number(transactionCount));
-        window.location.reload();
+        // window.location.reload();
       } else {
         console.log("No Ethereum Object Founc");
       }
@@ -168,18 +170,20 @@ export const TransactionProvider: React.FC<TransactionProviderProps> = ({
           await transactionContract.getAllTransactions();
 
         const formattedTransactions = availableTransactions.map(
-          (transaction: any) => ({
-            receiverAddress: transaction.receiver,
-            senderAddress: transaction.sender,
-            timestamp: timeAgo.format(
-              new Date(Number(transaction.timestamp) * 1000),
-              "mini"
-            ),
-            message: transaction.message,
-            amount: parseInt(transaction.amount._hex) / 10 ** 18,
-          })
+          (transaction: any) => {
+            const timestampInMilliseconds = Number(transaction[4]) * 1000;
+            const date = new Date(timestampInMilliseconds);
+
+            return {
+              receiverAddress: transaction[0],
+              senderAddress: transaction[1],
+              amount: parseInt(transaction[2].toString(), 10) / 10 ** 18,
+              message: transaction[3],
+              timestamp: timeAgo.format(date, "mini"),
+            };
+          }
         );
-        console.log(formattedTransactions, "formatted transactions");
+
         setUserTransactions(formattedTransactions);
       } else {
         console.log("No Ethereum Object Founc");
@@ -198,18 +202,18 @@ export const TransactionProvider: React.FC<TransactionProviderProps> = ({
   return (
     <TransactionContext.Provider
       value={{
+        setAmount,
+        setMessage,
         connectWallet,
-        currentAccount,
         sendTransaction,
         setReceiverAddress,
+        fetchTransactions,
+        currentAccount,
         receiverAddress,
-        setAmount,
         amount,
-        setMessage,
         message,
         isLoading,
         transactionCount,
-        fetchTransactions,
         userTransactions,
       }}
     >

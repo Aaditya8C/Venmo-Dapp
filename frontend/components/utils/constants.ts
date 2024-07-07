@@ -1,3 +1,3 @@
 import abi from "./Transactions.json";
-export const contractAddress = "0x66acfbae0e6fa49172fe47a3aeeb1ee7490f3a5b"; // get it from remix ide log
+export const contractAddress = "0xcf938f1da20ffbcdfba20552a5890b0bb2b1a855"; // get it from remix ide log
 export const contractAbi = abi.abi;

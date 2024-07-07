@@ -25,6 +25,9 @@ const RightSection = () => {
     e.preventDefault();
     if (!receiverAddress || !amount || !message) return;
     sendTransaction();
+    setReceiverAddress("");
+    setAmount("");
+    setMessage("");
   };
   return (
     <div className="grid gap-10">
@@ -84,7 +87,7 @@ const RightSection = () => {
         <p className="text-xl font-semibold"> Developed by Aaditya Padte</p>
         <p>Decentralized Platform for message sharing with payment option.</p>
       </div>
-      {isLoading && <Loader />}
+      {!isLoading && <Loader />}
     </div>
   );
 };
