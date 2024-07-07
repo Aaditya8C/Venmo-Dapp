@@ -173,10 +173,10 @@ export const TransactionProvider: React.FC<TransactionProviderProps> = ({
           (transaction: any) => {
             const timestampInMilliseconds = Number(transaction[4]) * 1000;
             const date = new Date(timestampInMilliseconds);
-
+            console.log(transaction);
             return {
-              receiverAddress: transaction[0],
-              senderAddress: transaction[1],
+              senderAddress: transaction[0],
+              receiverAddress: transaction[1],
               amount: parseInt(transaction[2].toString(), 10) / 10 ** 18,
               message: transaction[3],
               timestamp: timeAgo.format(date, "mini"),
@@ -198,6 +198,16 @@ export const TransactionProvider: React.FC<TransactionProviderProps> = ({
     isWalletConnected();
     isTransactionExists();
   }, [transactionCount]);
+
+  useEffect(() => {
+    window.ethereum.on("chainChanged", () => {
+      window.location.reload();
+    });
+
+    window.ethereum.on("accountsChanged", () => {
+      window.location.reload();
+    });
+  }, []);
 
   return (
     <TransactionContext.Provider

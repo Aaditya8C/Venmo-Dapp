@@ -1,6 +1,7 @@
 import { Button, InputAdornment, TextField } from "@mui/material";
 import {
   CircleDollarSign,
+  Clock10,
   Earth,
   Heart,
   MessageSquare,
@@ -37,7 +38,7 @@ const LeftSection = () => {
   console.log(userTransactions);
 
   return (
-    <div className="grid gap-10 h-fit">
+    <div className="grid gap-10">
       <div className="bg-orange-200 p-10">
         <div className="flex justify-between">
           <p className="text-xl font-semibold">Activity</p>
@@ -49,7 +50,7 @@ const LeftSection = () => {
         </div>
         <hr className="w-full h-[3px] my-2 bg-black " />
 
-        <div className="grid gap-4">
+        <div className="grid gap-8 h-[85%] overflow-x-scroll scrollbar-none">
           {userTransactions.length > 0 ? (
             userTransactions.map(
               (
@@ -70,7 +71,10 @@ const LeftSection = () => {
                       {textShortner(senderAddress)} {"    "}to{"    "}
                       {textShortner(receiverAddress)}
                     </p>
-                    <p className="italic">{timestamp}</p>
+                    <span className="flex gap-2 items-center">
+                      <p className="italic">{timestamp}</p>
+                      <Earth size={18} className="text-gray-600" />
+                    </span>
                     <p className="font-semibold">{message}</p>
                   </span>
                   <div className="flex gap-3">

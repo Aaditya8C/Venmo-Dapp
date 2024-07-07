@@ -87,7 +87,7 @@ const RightSection = () => {
         <p className="text-xl font-semibold"> Developed by Aaditya Padte</p>
         <p>Decentralized Platform for message sharing with payment option.</p>
       </div>
-      {!isLoading && <Loader />}
+      {isLoading && <Loader />}
     </div>
   );
 };
